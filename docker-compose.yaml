@@ -1,10 +1,9 @@
-version: '2.1'
+version: "2.1"
 
 networks:
   servers:
 
 services:
-
   balancer:
     build: .
     command: "lb"
