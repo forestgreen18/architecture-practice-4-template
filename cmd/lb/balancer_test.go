@@ -235,3 +235,66 @@ func (s *LoadBalancerSuite) TestSelectServerWithIncreasingTraffic(c *check.C) {
     }
     c.Assert(selectedServer.Address, check.Equals, expectedAddress)
 }
+
+func (s *LoadBalancerSuite) TestSelectServerInitialEqualTraffic(c *check.C) {
+  // Create mock HTTP servers
+  server1 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    if r.URL.Path == "/health" {
+      w.WriteHeader(http.StatusOK)
+      fmt.Fprintln(w, "healthy")
+      return
+    }
+    w.WriteHeader(http.StatusOK)
+    fmt.Fprintln(w, "server1")
+  }))
+  defer server1.Close()
+
+  server2 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    if r.URL.Path == "/health" {
+      w.WriteHeader(http.StatusOK)
+      fmt.Fprintln(w, "healthy")
+      return
+    }
+    w.WriteHeader(http.StatusOK)
+    fmt.Fprintln(w, "server2")
+  }))
+  defer server2.Close()
+
+  server3 := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+    if r.URL.Path == "/health" {
+      w.WriteHeader(http.StatusOK)
+      fmt.Fprintln(w, "healthy")
+      return
+    }
+    w.WriteHeader(http.StatusOK)
+    fmt.Fprintln(w, "server3")
+  }))
+  defer server3.Close()
+
+  // Override serversPool with mock servers with equal initial traffic
+  serversPool = []Server{
+    {Address: server1.Listener.Addr().String(), Traffic: 100},
+    {Address: server2.Listener.Addr().String(), Traffic: 100},
+    {Address: server3.Listener.Addr().String(), Traffic: 100},
+  }
+
+  // Override the scheme function to return "http"
+  scheme = func() string { return "http" }
+
+  // Mock the timeout variable
+  timeout = 1 * time.Second
+
+  // Call selectServer and assert the results
+  selectedServer, err := selectServer(serversPool)
+  c.Assert(err, check.IsNil)
+
+  // Check if any of the servers is selected as they all have equal traffic initially
+  validAddresses := map[string]bool{
+    server1.Listener.Addr().String(): true,
+    server2.Listener.Addr().String(): true,
+    server3.Listener.Addr().String(): true,
+  }
+
+  c.Assert(validAddresses[selectedServer.Address], check.Equals, true)
+}
+
