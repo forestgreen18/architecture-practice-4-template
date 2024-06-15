@@ -3,7 +3,7 @@ package main
 import (
 	"encoding/json"
 	"flag"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -23,7 +23,7 @@ func main() {
 	var err error
 	// Initialize the database
 
-	tempDir, err := ioutil.TempDir("", "temporaryDir")
+	tempDir, err := os.MkdirTemp("", "temporaryDir")
 	if err != nil {
 		log.Fatalf("Failed to create temporary directory: %v", err)
 	}
@@ -72,7 +72,7 @@ func dbHandler(res http.ResponseWriter, req *http.Request) {
 		var data struct {
 			Value string `json:"value"`
 		}
-		body, err := ioutil.ReadAll(req.Body)
+		body, err := io.ReadAll(req.Body)
 		if err != nil {
 			http.Error(res, "Invalid request", http.StatusBadRequest)
 			return

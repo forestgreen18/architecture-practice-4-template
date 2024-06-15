@@ -2,7 +2,7 @@ package integration
 
 import (
 	"fmt"
-	"io/ioutil"
+	"io"
 	"net/http"
 	"os"
 	"sync"
@@ -105,7 +105,7 @@ func (s *IntegrationSuite) TestSpecificKeyRequest(c *check.C) {
 
     c.Assert(resp.StatusCode, check.Equals, http.StatusOK)
 
-    body, err := ioutil.ReadAll(resp.Body)
+    body, err := io.ReadAll(resp.Body)
     c.Assert(err, check.IsNil)
 
     // Check the body is not empty and contains the expected value

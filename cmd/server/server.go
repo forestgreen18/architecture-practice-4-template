@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"flag"
 	"fmt"
-	"io/ioutil"
+	"io"
 	"log"
 	"net/http"
 	"os"
@@ -51,7 +51,6 @@ func main() {
 h.HandleFunc("/api/v1/some-data", func(rw http.ResponseWriter, r *http.Request) {
     keys, keyPresent := r.URL.Query()["key"]
 
-    // Handle delay if configured via environment variable
     if respDelayString := os.Getenv(confResponseDelaySec); respDelayString != "" {
         if delaySec, err := strconv.Atoi(respDelayString); err == nil && delaySec > 0 && delaySec < 300 {
             time.Sleep(time.Duration(delaySec) * time.Second)
@@ -74,7 +73,7 @@ h.HandleFunc("/api/v1/some-data", func(rw http.ResponseWriter, r *http.Request) 
             return
         }
 
-        body, err := ioutil.ReadAll(response.Body)
+        body, err :=  io.ReadAll(response.Body)
         if err != nil {
             log.Printf("Error reading response body: %v", err)
             rw.WriteHeader(http.StatusInternalServerError)
