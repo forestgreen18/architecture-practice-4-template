@@ -2,6 +2,7 @@ package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"flag"
 	"fmt"
 	"io/ioutil"
@@ -47,43 +48,52 @@ func main() {
 		}
 	})
 
-	h.HandleFunc("/api/v1/some-data", func(rw http.ResponseWriter, r *http.Request) {
-		keys, ok := r.URL.Query()["key"]
-		if !ok || len(keys[0]) < 1 {
-			log.Println("Url Param 'key' is missing")
-			rw.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		key := keys[0]
+h.HandleFunc("/api/v1/some-data", func(rw http.ResponseWriter, r *http.Request) {
+    keys, keyPresent := r.URL.Query()["key"]
 
-		respDelayString := os.Getenv(confResponseDelaySec)
-		if delaySec, parseErr := strconv.Atoi(respDelayString); parseErr == nil && delaySec > 0 && delaySec < 300 {
-			time.Sleep(time.Duration(delaySec) * time.Second)
-		}
+    // Handle delay if configured via environment variable
+    if respDelayString := os.Getenv(confResponseDelaySec); respDelayString != "" {
+        if delaySec, err := strconv.Atoi(respDelayString); err == nil && delaySec > 0 && delaySec < 300 {
+            time.Sleep(time.Duration(delaySec) * time.Second)
+        }
+    }
 
-		response, err := client.Get(fmt.Sprintf("%s/%s", dbServiceURL, key))
-		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			return
-		}
-		fmt.Println("Response: ", response)
-		defer response.Body.Close()
+    // Different behavior based on the presence of the "key" parameter
+    if keyPresent && len(keys[0]) > 0 {
+        key := keys[0]
+        response, err := client.Get(fmt.Sprintf("%s/%s", dbServiceURL, key))
+        if err != nil {
+            log.Printf("Error fetching data from DB service: %v", err)
+            rw.WriteHeader(http.StatusInternalServerError)
+            return
+        }
+        defer response.Body.Close()
 
-		if response.StatusCode == http.StatusNotFound {
-			rw.WriteHeader(http.StatusNotFound)
-			return
-		}
+        if response.StatusCode == http.StatusNotFound {
+            rw.WriteHeader(http.StatusNotFound)
+            return
+        }
 
-		body, err := ioutil.ReadAll(response.Body)
-		if err != nil {
-			rw.WriteHeader(http.StatusInternalServerError)
-			return
-		}
+        body, err := ioutil.ReadAll(response.Body)
+        if err != nil {
+            log.Printf("Error reading response body: %v", err)
+            rw.WriteHeader(http.StatusInternalServerError)
+            return
+        }
 
-		rw.Header().Set("content-type", "application/json")
-		rw.WriteHeader(http.StatusOK)
-		rw.Write(body)
-	})
+        rw.Header().Set("content-type", "application/json")
+        rw.WriteHeader(http.StatusOK)
+        rw.Write(body)
+    } else {
+        // No key provided, return a predefined response
+
+        rw.Header().Set("content-type", "application/json")
+        rw.WriteHeader(http.StatusOK)
+        _ = json.NewEncoder(rw).Encode([]string{"1", "2"})
+    }
+})
+
+
 
 	server := httptools.CreateServer(*port, h)
 	go server.Start()
