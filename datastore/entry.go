@@ -10,6 +10,19 @@ type entry struct {
 	key, value string
 }
 
+// calcEntrySize calculates the size of entry in bytes
+func calcEntrySize(key string, value string) int64 {
+	keySize := int64(len(key))
+	valueSize := int64(len(value))
+	headerSize := int64(8)
+	totalSize := headerSize + keySize + valueSize
+	return totalSize
+}
+
+func (e *entry) getLength() int64 {
+	return calcEntrySize(e.key, e.value)
+}
+
 func (e *entry) Encode() []byte {
 	kl := len(e.key)
 	vl := len(e.value)
@@ -22,6 +35,8 @@ func (e *entry) Encode() []byte {
 	copy(res[kl+12:], e.value)
 	return res
 }
+
+
 
 func (e *entry) Decode(input []byte) {
 	kl := binary.LittleEndian.Uint32(input[4:])
