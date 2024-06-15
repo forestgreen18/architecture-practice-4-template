@@ -11,11 +11,12 @@ import (
 	"strconv"
 	"time"
 
+	"github.com/roman-mazur/architecture-practice-4-template/config"
 	"github.com/roman-mazur/architecture-practice-4-template/httptools"
 	"github.com/roman-mazur/architecture-practice-4-template/signal"
 )
 
-var port = flag.Int("port", 8080, "server port")
+var port = flag.Int("port", config.ServerPort, "server port")
 const confResponseDelaySec = "CONF_RESPONSE_DELAY_SEC"
 const confHealthFailure = "CONF_HEALTH_FAILURE"
 const dbServiceURL = "http://db:8083/db"
@@ -26,7 +27,7 @@ func main() {
 	h := new(http.ServeMux)
 	client := http.DefaultClient
 
-	teamName := "nashizhyvchyky"
+	teamName := config.TeamName
 	currentDate := time.Now().Format("2006-01-02")
 	jsonData := []byte(fmt.Sprintf(`{"value":"%s"}`, currentDate))
 	_, err := client.Post(fmt.Sprintf("%s/%s", dbServiceURL, teamName), "application/json", bytes.NewBuffer(jsonData))

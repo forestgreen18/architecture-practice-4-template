@@ -9,6 +9,7 @@ import (
 	"testing"
 	"time"
 
+	"github.com/roman-mazur/architecture-practice-4-template/config"
 	"gopkg.in/check.v1"
 )
 
@@ -99,7 +100,7 @@ func (s *IntegrationSuite) TestSpecificKeyRequest(c *check.C) {
         c.Skip("Integration test is not enabled")
     }
 
-    key := "nashizhyvchyky"
+    key := config.TeamName
     expectedValue := time.Now().Format("2006-01-02")
 
     url := fmt.Sprintf("%s/api/v1/some-data?key=%s", baseAddress, key)
