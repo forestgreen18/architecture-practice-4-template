@@ -28,14 +28,7 @@ func main() {
 	h := new(http.ServeMux)
 	client := http.DefaultClient
 
-	teamName := config.TeamName
-	currentDate := time.Now().Format("2006-01-02")
-	jsonData := []byte(fmt.Sprintf(`{"value":"%s"}`, currentDate))
-	_, err := client.Post(fmt.Sprintf("%s/%s", dbServiceURL, teamName), "application/json", bytes.NewBuffer(jsonData))
-	fmt.Println("err", err)
-	if err != nil {
-		log.Fatalf("Failed to initialize database with date: %v", err)
-	}
+	initializeDatabaseConnection()
 
 	h.HandleFunc("/health", func(rw http.ResponseWriter, r *http.Request) {
 		rw.Header().Set("content-type", "text/plain")
@@ -99,4 +92,39 @@ h.HandleFunc("/api/v1/some-data", func(rw http.ResponseWriter, r *http.Request) 
 	log.Printf("Server started on port %d", *port)
 
 	signal.WaitForTerminationSignal()
+}
+
+
+const maxRetries = 5
+const retryInterval = 2 * time.Second
+
+func postWithRetry(url string, jsonData []byte) error {
+	var err error
+	for i := 0; i < maxRetries; i++ {
+		resp, err := http.Post(url, "application/json", bytes.NewBuffer(jsonData))
+		if err == nil  {
+			resp.Body.Close()
+			return nil
+		}
+		if resp != nil {
+			resp.Body.Close()
+		}
+		log.Printf("Attempt %d failed, retrying in %v...", i+1, retryInterval)
+		time.Sleep(retryInterval)
+	}
+	return fmt.Errorf("failed to post data after %d attempts: %v", maxRetries, err)
+}
+
+
+
+func initializeDatabaseConnection() {
+	teamName := config.TeamName
+	currentDate := time.Now().Format("2006-01-02")
+	jsonData := []byte(fmt.Sprintf(`{"value":"%s"}`, currentDate))
+
+	dbServiceURL := fmt.Sprintf("http://db:8083/db/%s", teamName)
+	err := postWithRetry(dbServiceURL, jsonData)
+	if err != nil {
+		log.Fatalf("Failed to initialize database with date: %v", err)
+	}
 }
