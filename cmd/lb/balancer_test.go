@@ -297,4 +297,3 @@ func (s *LoadBalancerSuite) TestSelectServerInitialEqualTraffic(c *check.C) {
 
   c.Assert(validAddresses[selectedServer.Address], check.Equals, true)
 }
-

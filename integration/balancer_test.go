@@ -2,6 +2,7 @@ package integration
 
 import (
 	"fmt"
+	"io/ioutil"
 	"net/http"
 	"os"
 	"sync"
@@ -90,6 +91,33 @@ func (s *IntegrationSuite) TestBalancer(c *check.C) {
 	}
 
 }
+
+var _ = check.Suite(&IntegrationSuite{})
+
+func (s *IntegrationSuite) TestSpecificKeyRequest(c *check.C) {
+    if _, exists := os.LookupEnv("INTEGRATION_TEST"); !exists {
+        c.Skip("Integration test is not enabled")
+    }
+
+    key := "nashizhyvchyky"
+    expectedValue := time.Now().Format("2006-01-02")
+
+    url := fmt.Sprintf("%s/api/v1/some-data?key=%s", baseAddress, key)
+    resp, err := client.Get(url)
+	fmt.Println("err ", err)
+    c.Assert(err, check.IsNil)
+    defer resp.Body.Close()
+
+    c.Assert(resp.StatusCode, check.Equals, http.StatusOK)
+
+    body, err := ioutil.ReadAll(resp.Body)
+    c.Assert(err, check.IsNil)
+
+    // Check the body is not empty and contains the expected value
+    c.Assert(string(body), check.Not(check.Equals), "")
+    c.Assert(string(body), check.Matches, fmt.Sprintf(`.*"%s".*`, expectedValue))
+}
+
 
 func BenchmarkBalancer(b *testing.B) {
 	if _, exists := os.LookupEnv("INTEGRATION_TEST"); !exists {

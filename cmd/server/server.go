@@ -26,7 +26,7 @@ func main() {
 	h := new(http.ServeMux)
 	client := http.DefaultClient
 
-	teamName := "nashizhivchiki"
+	teamName := "nashizhyvchyky"
 	currentDate := time.Now().Format("2006-01-02")
 	jsonData := []byte(fmt.Sprintf(`{"value":"%s"}`, currentDate))
 	_, err := client.Post(fmt.Sprintf("%s/%s", dbServiceURL, teamName), "application/json", bytes.NewBuffer(jsonData))
