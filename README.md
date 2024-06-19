@@ -9,6 +9,22 @@
 - Vadym Didur
 - Andriy Tarasiuk
 
+### Lab №5
+
+Completed Tasks
+
+#### Task 1: Segment Support and Merging
+
+Implemented dynamic segment creation and automated merging to optimize data storage and retrieval.
+
+#### Task 2: Competitiveness
+
+Enhanced data access speeds and concurrency handling to support high throughput and multiple simultaneous requests.
+
+#### Task 4: Integration with Other Components
+
+Integrated the database with a web server and a load balancer using Docker Compose, allowing for interaction between components.
+
 ### Project Overview:
 
 In this project, our team has developed a load balancer as per the specifications of variant 8. The load balancer is designed to distribute HTTP requests across a pool of servers using the "Least Amount of Traffic" algorithm. This algorithm selects the server that has served the least amount of data, measured in bytes, rather than the number of connections. This strategy ensures a fair distribution of network load and optimizes the overall server response times.
